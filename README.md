@@ -19,6 +19,8 @@ This operator enables dynamic integration of Kubernetes network policies with Ga
 kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.0/standard-install.yaml
 ```
 
+- Install Envoy Gateway, a Kubernetes-native API Gateway controller that manages Envoy Proxy deployments using the Kubernetes Gateway API.
+
 - Network Policies
 The operator watches for standard `networkpolicies.networking.k8s` resources in namespace `network-policies`.
 ```yaml
