@@ -1,123 +1,59 @@
-# gatewayapi-securitypolicy-operator
-// TODO(user): Add simple overview of use/purpose
+# GatewayApi-SecurityPolicy-Operator
 
 ## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+The whole purpose of the operator is to make sure that k8s network-policies can be used as a dynamic input to ingress objects.
+
+**Note**: The Ingress object reflects any changes in network policies.
+
+**Valid Annotations**:
+1. ``networking.k8s.io/whitelist-policy`` || ``networking.k8s.io/denylist-policy``
+   - the value should point to the name of the ``networkpolicies.networking.k8s.io`` object from namespace ``network-policies``.
+2. ``networkpolicies.networking.k8s.io/whitelist`` || ``networkpolicies.networking.k8s.io/denylist``
+   - gives you the ability to add custom ip-addresses by choice in addition to applied network policies.
+   - require valid prefix, f.ex ``10.0.0.1/32``.
+  
+  
+**Note**: Both annotations supports multiple values by comma separation.
 
 ## Getting Started
 
 ### Prerequisites
-- go version v1.24.0+
-- docker version 17.03+.
-- kubectl version v1.11.3+.
-- Access to a Kubernetes v1.11.3+ cluster.
+
+Install Gateway API Stable Channel Resources for v1.4.0 in the cluster
+```bash
+kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.0/standard-install.yaml
+```
 
 ### To Deploy on the cluster
-**Build and push your image to the location specified by `IMG`:**
 
-```sh
-make docker-build docker-push IMG=<some-registry>/gatewayapi-securitypolicy-operator:tag
+**ArgoCD application definition**:
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gatewayapi-securitypolicy-operator
+  namespace: argocd
+spec:
+  project: default
+  source:
+    path: .
+    repoURL: oci://ncr.sky.nhn.no/ghcr/vitistack/helm/gatewayapi-securitypolicy-operator
+    targetRevision: 1.*
+    helm:
+      valueFiles:
+          - values.yaml
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: gatewayapi-securitypolicy-system
+  syncPolicy:
+      automated:
+          selfHeal: true
+          prune: true
+      syncOptions:
+      - CreateNamespace=true
 ```
 
-**NOTE:** This image ought to be published in the personal registry you specified.
-And it is required to have access to pull the image from the working environment.
-Make sure you have the proper permission to the registry if the above commands don’t work.
-
-**Install the CRDs into the cluster:**
-
-```sh
-make install
-```
-
-**Deploy the Manager to the cluster with the image specified by `IMG`:**
-
-```sh
-make deploy IMG=<some-registry>/gatewayapi-securitypolicy-operator:tag
-```
-
-> **NOTE**: If you encounter RBAC errors, you may need to grant yourself cluster-admin
-privileges or be logged in as admin.
-
-**Create instances of your solution**
-You can apply the samples (examples) from the config/sample:
-
-```sh
-kubectl apply -k config/samples/
-```
-
->**NOTE**: Ensure that the samples has default values to test it out.
-
-### To Uninstall
-**Delete the instances (CRs) from the cluster:**
-
-```sh
-kubectl delete -k config/samples/
-```
-
-**Delete the APIs(CRDs) from the cluster:**
-
-```sh
-make uninstall
-```
-
-**UnDeploy the controller from the cluster:**
-
-```sh
-make undeploy
-```
-
-## Project Distribution
-
-Following the options to release and provide this solution to the users.
-
-### By providing a bundle with all YAML files
-
-1. Build the installer for the image built and published in the registry:
-
-```sh
-make build-installer IMG=<some-registry>/gatewayapi-securitypolicy-operator:tag
-```
-
-**NOTE:** The makefile target mentioned above generates an 'install.yaml'
-file in the dist directory. This file contains all the resources built
-with Kustomize, which are necessary to install this project without its
-dependencies.
-
-2. Using the installer
-
-Users can just run 'kubectl apply -f <URL for YAML BUNDLE>' to install
-the project, i.e.:
-
-```sh
-kubectl apply -f https://raw.githubusercontent.com/<org>/gatewayapi-securitypolicy-operator/<tag or branch>/dist/install.yaml
-```
-
-### By providing a Helm Chart
-
-1. Build the chart using the optional helm plugin
-
-```sh
-kubebuilder edit --plugins=helm/v1-alpha
-```
-
-2. See that a chart was generated under 'dist/chart', and users
-can obtain this solution from there.
-
-**NOTE:** If you change the project, you need to update the Helm Chart
-using the same command above to sync the latest changes. Furthermore,
-if you create webhooks, you need to use the above command with
-the '--force' flag and manually ensure that any custom configuration
-previously added to 'dist/chart/values.yaml' or 'dist/chart/manager/manager.yaml'
-is manually re-applied afterwards.
-
-## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
-
-**NOTE:** Run `make help` for more information on all potential `make` targets
-
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
-
-## License
+# License
 
 Copyright 2025.
 
@@ -132,5 +68,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-# gatewayapi-securitypolicy-operator
