@@ -1,27 +1,44 @@
 # GatewayApi-SecurityPolicy-Operator
 
 ## Description
-The whole purpose of the operator is to make sure that k8s network-policies can be used as a dynamic input to ingress objects.
+This operator enables dynamic integration of Kubernetes network policies with Gateway API resources. It monitors network policy objects and automatically applies IP-based allow/deny lists to Gateway API SecurityPolicies through annotations, ensuring network security rules are consistently enforced at the ingress layer.
 
-**Note**: The Ingress object reflects any changes in network policies.
+**Note**: This operator currently supports `HTTPRoute`, `GRPCRoute`, and `Gateway` resources. Support for additional resources such as `TCPRoute` will be added once they reach the v1 stability channel.
 
 **Valid Annotations**:
-1. ``networking.k8s.io/whitelist-policy`` || ``networking.k8s.io/denylist-policy``
-   - the value should point to the name of the ``networkpolicies.networking.k8s.io`` object from namespace ``network-policies``.
-2. ``networkpolicies.networking.k8s.io/whitelist`` || ``networkpolicies.networking.k8s.io/denylist``
-   - gives you the ability to add custom ip-addresses by choice in addition to applied network policies.
-   - require valid prefix, f.ex ``10.0.0.1/32``.
-  
-  
-**Note**: Both annotations supports multiple values by comma separation.
+- `securitypolicies.vitistack.io/default-action`: Specifies default action for the security policy. Valid values: `deny` || `allow`. It defaults to `deny` if omitted.
+- `securitypolicies.vitistack.io/lists`: Specifies the name of the `NetworkPolicy`. The Controller watches `networkpolicies.networking.k8s` in namespace `network-policies`. It supports multiple lists separated by comma.
+- `securitypolicies.vitistack.io/addresses`: Specifies a list of CIDR blocks to be manually included, e.g., `10.20.30.40/32,172.16.12.1/32`.
 
 ## Getting Started
 
 ### Prerequisites
 
-Install Gateway API Stable Channel Resources for v1.4.0 in the cluster
+- Install Gateway API Stable Channel Resources for v1.4.0 in the cluster
 ```bash
 kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.0/standard-install.yaml
+```
+
+- Network Policies
+The operator watches for standard `networkpolicies.networking.k8s` resources in namespace `network-policies`.
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: example-securitypolicy-list
+  namespace: network-policies
+spec:
+  ingress:
+  - from:
+    - ipBlock:
+        cidr: 10.20.25.0/26
+    - ipBlock:
+        cidr: 172.16.1.0/24
+  podSelector:
+    matchLabels:
+      network-policies: example-securitypolicy-list
+  policyTypes:
+  - Ingress
 ```
 
 ### To Deploy on the cluster
