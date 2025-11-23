@@ -25,6 +25,7 @@ kubectl apply --server-side -f https://github.com/envoyproxy/gateway/releases/do
 ```
 
 - Network Policies
+
 The operator watches for standard `networkpolicies.networking.k8s` resources in namespace `network-policies`.
 ```yaml
 apiVersion: networking.k8s.io/v1
