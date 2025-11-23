@@ -39,9 +39,9 @@ type GRPCRouteReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=gateway.networking.k8s.io/v1,resources=grpcroutes,verbs=get;list;watch;update;patch
-// +kubebuilder:rbac:groups=gateway.envoyproxy.io/v1alpha1,resources=securitypolicies,verbs=get;list;watch;update;patch;delete
-// +kubebuilder:rbac:groups=networking.k8s.io/v1,resources=networkpolicies,verbs=get;list;watch
+// +kubebuilder:rbac:groups=gateway.networking.k8s.io,resources=grpcroutes,verbs=get;list;watch;update;patch
+// +kubebuilder:rbac:groups=gateway.envoyproxy.io,resources=securitypolicies,verbs=get;list;watch;update;patch;delete
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

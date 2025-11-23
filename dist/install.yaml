@@ -63,7 +63,7 @@ metadata:
   name: securitypolicy-operator-manager-role
 rules:
 - apiGroups:
-  - gateway.envoyproxy.io/v1alpha1
+  - gateway.envoyproxy.io
   resources:
   - securitypolicies
   verbs:
@@ -74,7 +74,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - gateway.networking.k8s.io/v1
+  - gateway.networking.k8s.io
   resources:
   - gateways
   - grpcroutes
@@ -86,7 +86,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - networking.k8s.io/v1
+  - networking.k8s.io
   resources:
   - networkpolicies
   verbs:
