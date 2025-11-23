@@ -20,6 +20,9 @@ kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/re
 ```
 
 - Install Envoy Gateway, a Kubernetes-native API Gateway controller that manages Envoy Proxy deployments using the Kubernetes Gateway API.
+```bash
+kubectl apply --server-side -f https://github.com/envoyproxy/gateway/releases/download/v1.6.0/install.yaml
+```
 
 - Network Policies
 The operator watches for standard `networkpolicies.networking.k8s` resources in namespace `network-policies`.
