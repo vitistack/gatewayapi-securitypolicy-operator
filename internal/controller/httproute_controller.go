@@ -72,7 +72,7 @@ func (r *HTTPRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	// Examine DeletionTimestamp to determine if object is under deletion
-	if httproute.ObjectMeta.DeletionTimestamp.IsZero() {
+	if httproute.DeletionTimestamp.IsZero() {
 		// The object is not being deleted, so if it does not have our finalizer,
 		// then let's add the finalizer and update the object. This is equivalent
 		// to registering our finalizer.

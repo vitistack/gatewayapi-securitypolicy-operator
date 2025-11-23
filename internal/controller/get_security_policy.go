@@ -31,7 +31,7 @@ func getSecurityPolicy(ctx context.Context, r client.Client, gatewayApiResource 
 
 	// Return error if no SecurityPolicies found
 	if len(processedSecurityPolicyList) == 0 {
-		return envoyv1.SecurityPolicy{}, fmt.Errorf("No SecurityPolicies found for HTTPRoute %s/%s", gatewayApiResource.Namespace, gatewayApiResource.Name)
+		return envoyv1.SecurityPolicy{}, fmt.Errorf("no SecurityPolicies found for HTTPRoute %s/%s", gatewayApiResource.Namespace, gatewayApiResource.Name)
 	}
 
 	// Return SecurityPolicy if count is 1
