@@ -1,0 +1,28 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: my-httproute
+spec:
+  parentRefs:
+    - name: my-gateway # Refers to a Gateway resource named 'my-gateway'
+      sectionName: http # Attaches to the 'http' listener on the Gateway
+  hostnames:
+    - example.com # Matches requests for this hostname
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/v1/users # Matches requests with paths starting with /api/v1/users
+      backendRefs:
+        - name: user-service # Routes to a Kubernetes Service named 'user-service'
+          port: 8080 # On port 8080 of the service
+    - matches:
+        - path:
+            type: Exact
+            value: /healthz # Matches requests for the exact path /healthz
+      backendRefs:
+        - name: health-check-service # Routes to a Kubernetes Service named 'health-check-service'
+          port: 80 # On port 80 of the service
+    - backendRefs: # Default rule if no other matches are found
+        - name: default-service
+          port: 80

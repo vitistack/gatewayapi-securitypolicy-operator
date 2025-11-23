@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: expose-thula
+  namespace: network-policies
+spec:
+  ingress:
+  - from:
+    - ipBlock:
+        cidr: 13.202.13.0/26
+    - ipBlock:
+        cidr: 10.202.8.64/26
+  podSelector:
+    matchLabels:
+      network-policies: expose-btr-office-client
+  policyTypes:
+  - Ingress

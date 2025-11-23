@@ -1,0 +1,105 @@
+name: Build and Test
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["main","master"]
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      GOPRIVATE: github.com/vitistack
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+
+      - name: Configure Git for private repos
+        run: |
+          git config --global url.https://$GH_TOKEN@github.com/.insteadOf https://github.com/
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+          # This will cache both Go modules and build cache
+          cache-dependency-path: go.sum
+
+      # Cache bin folder with tools and binaries
+      - name: Cache bin folder
+        uses: actions/cache@v4
+        with:
+          path: bin
+          key: ${{ runner.os }}-bin-${{ hashFiles('go.mod', 'go.sum', 'Makefile') }}
+          restore-keys: |
+            ${{ runner.os }}-bin-
+
+      - name: Install dependencies
+        run: go mod download
+        env:
+          GOPRIVATE: github.com/vitistack
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Lint (go vet)
+        run: go vet ./...
+
+      - name: Install setup-envtest
+        run: |
+          go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+
+      - name: Setup envtest binaries
+        id: envtest
+        run: |
+          # Choose Kubernetes version compatible with your controller-runtime version
+          ENVTEST_ASSETS=$(setup-envtest use -p path 1.30.x)
+          echo "KUBEBUILDER_ASSETS=$ENVTEST_ASSETS" >> $GITHUB_ENV
+
+      - name: Run tests
+        run: |
+          go test $(go list ./... | grep -v test) -coverprofile=coverage.out
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    env:
+      GOPRIVATE: github.com/vitistack
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+    # Run in parallel with build job
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure Git for private repos
+        run: |
+          git config --global url.https://$GH_TOKEN@github.com/.insteadOf https://github.com/
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Install dependencies
+        run: |
+          go mod download
+        env:
+          GOPRIVATE: github.com/vitistack/*
+          GOPROXY: direct
+
+      - name: Run security scan
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+        env:
+          GOPRIVATE: github.com/vitistack/*
