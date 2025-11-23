@@ -46,7 +46,7 @@ spec:
   - Ingress
 ```
 
-### To Deploy on the cluster
+### Cluster Deployment
 
 **ArgoCD application definition**:
 ```yaml
