@@ -89,11 +89,8 @@ func (r *NetworkPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			listEntries := strings.Split(annotationLists, ",")
 			if slices.Contains(listEntries, networkPolicy.Name) {
 				// Update the HttpRoute to trigger reconciliation
-				// Use a merge patch instead of full Update
-				deepCopyHttpRoute := httpRoute.DeepCopy()
-				httpRoute.Annotations[AnnotationSecurityPolicyLastUpdated] = ""
-				if err := r.Patch(ctx, &httpRoute, client.MergeFrom(deepCopyHttpRoute)); err != nil {
-					log.Error(err, "Failed to patch HttpRoute", "HttpRoute.Namespace", httpRoute.Namespace, "HttpRoute.Name", httpRoute.Name)
+				if err := notifyController(ctx, r.Client, &httpRoute); err != nil {
+					log.Error(err, "Failed to notify HttpRoute", "HttpRoute.Namespace", httpRoute.Namespace, "HttpRoute.Name", httpRoute.Name)
 					return ctrl.Result{}, err
 				}
 				log.Info("Patched HttpRoute due to NetworkPolicy change", "HttpRoute.Namespace", httpRoute.Namespace, "HttpRoute.Name", httpRoute.Name)
@@ -109,11 +106,8 @@ func (r *NetworkPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			listEntries := strings.Split(annotationLists, ",")
 			if slices.Contains(listEntries, networkPolicy.Name) {
 				// Update the grpcRoute to trigger reconciliation
-				// Use a merge patch instead of full Update
-				deepCopyGRPCRoute := grpcRoute.DeepCopy()
-				grpcRoute.Annotations[AnnotationSecurityPolicyLastUpdated] = ""
-				if err := r.Patch(ctx, &grpcRoute, client.MergeFrom(deepCopyGRPCRoute)); err != nil {
-					log.Error(err, "Failed to patch GRPCRoute", "GRPCRoute.Namespace", grpcRoute.Namespace, "GRPCRoute.Name", grpcRoute.Name)
+				if err := notifyController(ctx, r.Client, &grpcRoute); err != nil {
+					log.Error(err, "Failed to notify grpcRoute", "grpcRoute.Namespace", grpcRoute.Namespace, "grpcRoute.Name", grpcRoute.Name)
 					return ctrl.Result{}, err
 				}
 				log.Info("Patched GRPCRoute due to NetworkPolicy change", "GRPCRoute.Namespace", grpcRoute.Namespace, "GRPCRoute.Name", grpcRoute.Name)
@@ -129,11 +123,8 @@ func (r *NetworkPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			listEntries := strings.Split(annotationLists, ",")
 			if slices.Contains(listEntries, networkPolicy.Name) {
 				// Update the gateway to trigger reconciliation
-				// Use a merge patch instead of full Update
-				deepCopyGateway := gateway.DeepCopy()
-				gateway.Annotations[AnnotationSecurityPolicyLastUpdated] = ""
-				if err := r.Patch(ctx, &gateway, client.MergeFrom(deepCopyGateway)); err != nil {
-					log.Error(err, "Failed to patch Gateway", "Gateway.Namespace", gateway.Namespace, "Gateway.Name", gateway.Name)
+				if err := notifyController(ctx, r.Client, &gateway); err != nil {
+					log.Error(err, "Failed to notify Gateway", "Gateway.Namespace", gateway.Namespace, "Gateway.Name", gateway.Name)
 					return ctrl.Result{}, err
 				}
 				log.Info("Patched Gateway due to NetworkPolicy change", "Gateway.Namespace", gateway.Namespace, "Gateway.Name", gateway.Name)
