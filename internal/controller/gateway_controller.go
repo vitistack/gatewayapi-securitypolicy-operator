@@ -131,7 +131,8 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	// Create a patch to update mandatory annotations
 	deepCopygateway := gateway.DeepCopy()
 	gateway.Annotations[AnnotationSecurityPolicyLastUpdated] = time.Now().Format(time.RFC3339)
-	gateway.Annotations[AnnotationSecurityPolicyManagedBy] = AnnotationSecurityPolicyOwner
+	gateway.Annotations[AnnotationSecurityPolicyManagedBy] = SecurityPolicyOwner
+	gateway.Annotations[AnnotationSecurityPolicyGateway] = DefaultAPIGatewayName
 	// Apply the patch
 	if err := r.Patch(ctx, &gateway, client.MergeFrom(deepCopygateway)); err != nil {
 		log.Error(err, "unable to patch gateway with mandatory annotations", "Gateway.Namespace", req.Namespace, "Gateway.Name", req.Name)
