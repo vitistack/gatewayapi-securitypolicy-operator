@@ -131,7 +131,8 @@ func (r *GRPCRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// Create a patch to update mandatory annotations
 	deepCopygrpcroute := grpcroute.DeepCopy()
 	grpcroute.Annotations[AnnotationSecurityPolicyLastUpdated] = time.Now().Format(time.RFC3339)
-	grpcroute.Annotations[AnnotationSecurityPolicyManagedBy] = AnnotationSecurityPolicyOwner
+	grpcroute.Annotations[AnnotationSecurityPolicyManagedBy] = SecurityPolicyOwner
+	grpcroute.Annotations[AnnotationSecurityPolicyGateway] = DefaultAPIGatewayName
 	// Apply the patch
 	if err := r.Patch(ctx, &grpcroute, client.MergeFrom(deepCopygrpcroute)); err != nil {
 		log.Error(err, "unable to patch GRPCRoute with mandatory annotations", "GRPCRoute.Namespace", req.Namespace, "GRPCRoute.Name", req.Name)

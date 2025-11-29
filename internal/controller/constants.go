@@ -7,6 +7,9 @@ const (
 	AnnotationSecurityPolicyAddresses     = "securitypolicies.vitistack.io/addresses"
 	AnnotationSecurityPolicyLastUpdated   = "securitypolicies.vitistack.io/last-updated"
 	AnnotationSecurityPolicyManagedBy     = "securitypolicies.vitistack.io/managed-by"
-	AnnotationSecurityPolicyOwner         = "gatewayapi-securitypolicy-operator"
+	SecurityPolicyOwner                   = "gatewayapi-securitypolicy-operator"
+	AnnotationSecurityPolicyGateway       = "securitypolicies.vitistack.io/gateway"
+	DefaultAPIGatewayName                 = "envoy-proxy"
+	FinalizerNetworkPolicy                = "networkpolicies.vitistack.io/finalizer"
 	FinalizerSecurityPolicy               = "securitypolicies.vitistack.io/finalizer"
 )

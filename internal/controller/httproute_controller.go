@@ -131,7 +131,8 @@ func (r *HTTPRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// Create a patch to update mandatory annotations
 	deepCopyHttpRoute := httproute.DeepCopy()
 	httproute.Annotations[AnnotationSecurityPolicyLastUpdated] = time.Now().Format(time.RFC3339)
-	httproute.Annotations[AnnotationSecurityPolicyManagedBy] = AnnotationSecurityPolicyOwner
+	httproute.Annotations[AnnotationSecurityPolicyManagedBy] = SecurityPolicyOwner
+	httproute.Annotations[AnnotationSecurityPolicyGateway] = DefaultAPIGatewayName
 	// Apply the patch
 	if err := r.Patch(ctx, &httproute, client.MergeFrom(deepCopyHttpRoute)); err != nil {
 		log.Error(err, "unable to patch HTTPRoute with mandatory annotations", "HttpRoute.Namespace", req.Namespace, "HttpRoute.Name", req.Name)
