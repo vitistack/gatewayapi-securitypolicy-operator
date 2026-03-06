@@ -18,6 +18,7 @@ rules:
   - patch
   - update
   - watch
+  - create
 - apiGroups:
   - gateway.networking.k8s.io
   resources:
