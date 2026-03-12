@@ -7,8 +7,9 @@ domain: vitistack.io
 layout:
 - go.kubebuilder.io/v4
 plugins:
-  helm.kubebuilder.io/v1-alpha: {}
-  helm.kubebuilder.io/v2-alpha: {}
+  helm.kubebuilder.io/v2-alpha:
+    manifests: dist/install.yaml
+    output: dist
 projectName: gatewayapi-securitypolicy-operator
 repo: github.com/vitistack/gatewayapi-securitypolicy-operator
 version: "3"
