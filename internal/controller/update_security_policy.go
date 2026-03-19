@@ -61,7 +61,7 @@ func updateSecurityPolicy(ctx context.Context, r Client, securitypolicy envoyv1.
 		if err := r.Update(ctx, &securitypolicy); err != nil {
 			return fmt.Errorf("failed to update SecurityPolicy: %w", err)
 		}
-		return fmt.Errorf("removed all security policy rules")
+		return nil
 	}
 
 	// Convert string slice to CIDR slice
