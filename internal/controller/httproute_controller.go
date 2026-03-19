@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -94,9 +95,30 @@ func (r *HTTPRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			}
 		}
 		// remove our finalizer from the list and update it.
-		controllerutil.RemoveFinalizer(&httproute, FinalizerSecurityPolicy)
-		if err := r.Update(ctx, &httproute); err != nil {
-			return ctrl.Result{}, err
+		err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+			var latest gatewayv1.HTTPRoute
+			// Get the latest version of the HTTPRoute object.
+			if err := r.Get(ctx, req.NamespacedName, &latest); err != nil {
+				// If the object is already gone, nothing to do
+				if client.IgnoreNotFound(err) == nil {
+					return nil
+				}
+				return err
+			}
+
+			controllerutil.RemoveFinalizer(&latest, FinalizerSecurityPolicy)
+			// Try to update. Return error to RetryOnConflict which wil trigger a new attempt if object is stale.
+			return r.Update(ctx, &latest)
+		})
+		if err != nil {
+			// Ignore not found errors - the object might have been deleted by another reconciliation
+			if client.IgnoreNotFound(err) != nil {
+				log.Error(err, "Failed to remove finalizer")
+				return ctrl.Result{}, err
+			}
+			log.Info("HTTPRoute already deleted", "name", req.NamespacedName)
+		} else {
+			log.Info("Removed finalizer from HTTPRoute", "name", req.NamespacedName)
 		}
 		// Stop reconciliation as the item is being deleted
 		return ctrl.Result{}, nil
