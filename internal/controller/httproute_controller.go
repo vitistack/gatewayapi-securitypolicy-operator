@@ -113,7 +113,7 @@ func (r *HTTPRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		if err != nil {
 			// Ignore not found errors - the object might have been deleted by another reconciliation
 			if client.IgnoreNotFound(err) != nil {
-				log.Error(err, "Failed to remove finalizer")
+				log.Error(err, "Failed to remove finalizer for", "HTTPRoute", req.NamespacedName)
 				return ctrl.Result{}, err
 			}
 			log.Info("HTTPRoute already deleted", "name", req.NamespacedName)
