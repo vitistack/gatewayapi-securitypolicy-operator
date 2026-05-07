@@ -158,14 +158,13 @@ func (r *GatewayReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			oldObjAnnotationSecurityPolicyAddresses := e.ObjectOld.GetAnnotations()[AnnotationSecurityPolicyAddresses]
 			newObjAnnotationSecurityPolicyAddresses := e.ObjectNew.GetAnnotations()[AnnotationSecurityPolicyAddresses]
 
-			oldObjAnnotationSecurityPolicyLastUpdated := e.ObjectOld.GetAnnotations()[AnnotationSecurityPolicyLastUpdated]
 			newdObjAnnotationSecurityPolicyLastUpdated := e.ObjectNew.GetAnnotations()[AnnotationSecurityPolicyLastUpdated]
 
 			// Trigger reconciliation if relevant annotations have changed
 			return !reflect.DeepEqual(oldObjAnnotationSecurityPolicyDefaultAction, newObjAnnotationSecurityPolicyDefaultAction) ||
 				!reflect.DeepEqual(oldObjAnnotationSecurityPolicyLists, newObjAnnotationSecurityPolicyLists) ||
 				!reflect.DeepEqual(oldObjAnnotationSecurityPolicyAddresses, newObjAnnotationSecurityPolicyAddresses) ||
-				!reflect.DeepEqual(oldObjAnnotationSecurityPolicyLastUpdated, newdObjAnnotationSecurityPolicyLastUpdated) ||
+				newdObjAnnotationSecurityPolicyLastUpdated == "" ||
 				!reflect.DeepEqual(e.ObjectOld.GetDeletionTimestamp(), e.ObjectNew.GetDeletionTimestamp())
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
