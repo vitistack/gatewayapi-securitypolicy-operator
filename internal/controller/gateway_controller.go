@@ -125,7 +125,7 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	// Update SecurityPolicy based on annotations
 	if err := updateSecurityPolicy(ctx, r.Client, securityPolicy, annotations); err != nil {
 		log.Info("Update SecurityPolicy for Gateway", "Gateway.Namespace", req.Namespace, "Gateway.Name", req.Name, "Error", err)
-		return ctrl.Result{}, err
+		return ctrl.Result{}, nil
 	}
 
 	// Create a patch to update mandatory annotations

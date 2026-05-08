@@ -2,15 +2,14 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
 	utils "github.com/vitistack/gatewayapi-securitypolicy-operator/internal/utils"
 	v1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func getAddresses(ctx context.Context, r Client, securityPolicyList []string, addressList []string) []string {
-	log := logf.FromContext(ctx)
+func getAddresses(ctx context.Context, r Client, securityPolicyList []string, addressList []string) ([]string, error) {
 
 	var cidrs []string
 
@@ -26,8 +25,7 @@ func getAddresses(ctx context.Context, r Client, securityPolicyList []string, ad
 		}, &processNetworkPolicy)
 
 		if err != nil {
-			log.Error(err, "Unable to fetch NetworkPolicy", "NetworkPolicy.Name", networkPolicy)
-			continue
+			return nil, fmt.Errorf("unable to fetch NetworkPolicy %q: %w", networkPolicy, err)
 		}
 
 		// Extract CIDRs from NetworkPolicy and append to list
@@ -38,11 +36,13 @@ func getAddresses(ctx context.Context, r Client, securityPolicyList []string, ad
 	for _, cidr := range addressList {
 		if utils.CheckValidCIDR(cidr) {
 			cidrs = append(cidrs, cidr)
+		} else {
+			return nil, fmt.Errorf("Invalid CIDR %q in custom list, skipping", cidr)
 		}
 	}
 
 	// Remove duplicates and sort
 	compactSortedCIDRs := utils.SortSlice(cidrs)
 
-	return compactSortedCIDRs
+	return compactSortedCIDRs, nil
 }
