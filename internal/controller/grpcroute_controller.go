@@ -144,7 +144,7 @@ func (r *GRPCRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// Update SecurityPolicy based on annotations
 	if err := updateSecurityPolicy(ctx, r.Client, securityPolicy, annotations); err != nil {
 		log.Info("Update SecurityPolicy for GRPCRoute", "GRPCRoute.Namespace", req.Namespace, "GRPCRoute.Name", req.Name, "Error", err)
-		return ctrl.Result{}, err
+		return ctrl.Result{}, nil
 	}
 
 	// Create a patch to update mandatory annotations

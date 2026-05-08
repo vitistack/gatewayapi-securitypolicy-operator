@@ -145,8 +145,8 @@ func (r *HTTPRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// Update SecurityPolicy based on annotations
 	if err := updateSecurityPolicy(ctx, r.Client, securityPolicy, annotations); err != nil {
-		log.Info("Update SecurityPolicy for HTTPRoute", "HttpRoute.Namespace", req.Namespace, "HttpRoute.Name", req.Name, "Error", err)
-		return ctrl.Result{}, err
+		log.Info("Reconciling HttpRoute failed!", "HttpRoute.Namespace", req.Namespace, "HttpRoute.Name", req.Name, "Error", err)
+		return ctrl.Result{}, nil
 	}
 
 	// Create a patch to update mandatory annotations

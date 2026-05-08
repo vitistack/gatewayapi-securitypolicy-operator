@@ -53,7 +53,10 @@ func updateSecurityPolicy(ctx context.Context, r Client, securitypolicy envoyv1.
 	}
 
 	// Get addresses
-	cidrs := getAddresses(ctx, r, sliceAnnotationSecurityPolicyLists, sliceAnnotationSecurityPolicyAddresses)
+	cidrs, err := getAddresses(ctx, r, sliceAnnotationSecurityPolicyLists, sliceAnnotationSecurityPolicyAddresses)
+	if err != nil {
+		return err
+	}
 
 	// Remove SecurityPolicy Rules if no CIDRs found
 	if len(cidrs) == 0 {
