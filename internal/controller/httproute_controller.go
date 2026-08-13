@@ -76,7 +76,10 @@ func (r *HTTPRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		// The object is not being deleted, so if it does not have our finalizer,
 		// then let's add the finalizer and update the object. This is equivalent
 		// to registering our finalizer.
-		if !controllerutil.ContainsFinalizer(&httproute, FinalizerSecurityPolicy) {
+		if !controllerutil.ContainsFinalizer(&httproute, FinalizerSecurityPolicy) &&
+			(httproute.Annotations[AnnotationSecurityPolicyLastUpdated] != "" ||
+				httproute.Annotations[AnnotationSecurityPolicyManagedBy] != "" ||
+				httproute.Annotations[AnnotationSecurityPolicyGateway] != "") {
 			log.Info("Add Finalizer", "HttpRoute.Namespace", req.Namespace, "HttpRoute.Name", req.Name)
 			controllerutil.AddFinalizer(&httproute, FinalizerSecurityPolicy)
 			if err := r.Update(ctx, &httproute); err != nil {
@@ -121,6 +124,40 @@ func (r *HTTPRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			log.Info("Removed finalizer from HTTPRoute", "name", req.NamespacedName)
 		}
 		// Stop reconciliation as the item is being deleted
+		return ctrl.Result{}, nil
+	}
+
+	// Delete SecurityPolicy if relevant annotations are removed from HTTPRoute
+	if httproute.Annotations[AnnotationSecurityPolicyDefaultAction] == "" &&
+		httproute.Annotations[AnnotationSecurityPolicyLists] == "" &&
+		httproute.Annotations[AnnotationSecurityPolicyAddresses] == "" {
+		// Only delete if a SecurityPolicy actually exists
+		if _, err := getSecurityPolicy(ctx, r.Client, gatewayApiResource); err == nil {
+			log.Info("Relevant annotations removed from HTTPRoute, deleting associated SecurityPolicy", "HttpRoute.Namespace", req.Namespace, "HttpRoute.Name", req.Name)
+			if err := deleteSecurityPolicy(ctx, r.Client, gatewayApiResource); err != nil {
+				log.Info("Failed to delete SecurityPolicy", "HttpRoute.Namespace", req.Namespace, "HttpRoute.Name", req.Name, "Error", err)
+				return ctrl.Result{}, err
+			}
+			log.Info("Deleted SecurityPolicy for HTTPRoute", "HttpRoute.Namespace", req.Namespace, "HttpRoute.Name", req.Name)
+		}
+
+		// Remove our finalizer and the annotations we manage.
+		// Only patch when there is something to remove, otherwise the resulting
+		// update event re-triggers reconciliation and loops.
+		if controllerutil.ContainsFinalizer(&httproute, FinalizerSecurityPolicy) ||
+			httproute.Annotations[AnnotationSecurityPolicyLastUpdated] != "" ||
+			httproute.Annotations[AnnotationSecurityPolicyManagedBy] != "" ||
+			httproute.Annotations[AnnotationSecurityPolicyGateway] != "" {
+			deepCopyHttpRoute := httproute.DeepCopy()
+			controllerutil.RemoveFinalizer(&httproute, FinalizerSecurityPolicy)
+			delete(httproute.Annotations, AnnotationSecurityPolicyLastUpdated)
+			delete(httproute.Annotations, AnnotationSecurityPolicyManagedBy)
+			delete(httproute.Annotations, AnnotationSecurityPolicyGateway)
+			if err := r.Patch(ctx, &httproute, client.MergeFrom(deepCopyHttpRoute)); err != nil {
+				log.Error(err, "unable to remove finalizer and managed annotations from HTTPRoute", "HttpRoute.Namespace", req.Namespace, "HttpRoute.Name", req.Name)
+				return ctrl.Result{}, err
+			}
+		}
 		return ctrl.Result{}, nil
 	}
 

@@ -1,6 +1,6 @@
 module github.com/vitistack/gatewayapi-securitypolicy-operator
 
-go 1.26.2
+go 1.26.5
 
 require (
 	github.com/envoyproxy/gateway v1.7.1

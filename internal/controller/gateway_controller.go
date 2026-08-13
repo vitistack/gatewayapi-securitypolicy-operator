@@ -76,7 +76,10 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		// The object is not being deleted, so if it does not have our finalizer,
 		// then let's add the finalizer and update the object. This is equivalent
 		// to registering our finalizer.
-		if !controllerutil.ContainsFinalizer(&gateway, FinalizerSecurityPolicy) {
+		if !controllerutil.ContainsFinalizer(&gateway, FinalizerSecurityPolicy) &&
+			(gateway.Annotations[AnnotationSecurityPolicyLastUpdated] != "" ||
+				gateway.Annotations[AnnotationSecurityPolicyManagedBy] != "" ||
+				gateway.Annotations[AnnotationSecurityPolicyGateway] != "") {
 			log.Info("Add Finalizer", "Gateway.Namespace", req.Namespace, "Gateway.Name", req.Name)
 			controllerutil.AddFinalizer(&gateway, FinalizerSecurityPolicy)
 			if err := r.Update(ctx, &gateway); err != nil {
@@ -100,6 +103,40 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			return ctrl.Result{}, err
 		}
 		// Stop reconciliation as the item is being deleted
+		return ctrl.Result{}, nil
+	}
+
+	// Delete SecurityPolicy if relevant annotations are removed from Gateway
+	if gateway.Annotations[AnnotationSecurityPolicyDefaultAction] == "" &&
+		gateway.Annotations[AnnotationSecurityPolicyLists] == "" &&
+		gateway.Annotations[AnnotationSecurityPolicyAddresses] == "" {
+		// Only delete if a SecurityPolicy actually exists
+		if _, err := getSecurityPolicy(ctx, r.Client, gatewayApiResource); err == nil {
+			log.Info("Relevant annotations removed from Gateway, deleting associated SecurityPolicy", "Gateway.Namespace", req.Namespace, "Gateway.Name", req.Name)
+			if err := deleteSecurityPolicy(ctx, r.Client, gatewayApiResource); err != nil {
+				log.Info("Failed to delete SecurityPolicy", "Gateway.Namespace", req.Namespace, "Gateway.Name", req.Name, "Error", err)
+				return ctrl.Result{}, err
+			}
+			log.Info("Deleted SecurityPolicy for Gateway", "Gateway.Namespace", req.Namespace, "Gateway.Name", req.Name)
+		}
+
+		// Remove our finalizer and the annotations we manage.
+		// Only patch when there is something to remove, otherwise the resulting
+		// update event re-triggers reconciliation and loops.
+		if controllerutil.ContainsFinalizer(&gateway, FinalizerSecurityPolicy) ||
+			gateway.Annotations[AnnotationSecurityPolicyLastUpdated] != "" ||
+			gateway.Annotations[AnnotationSecurityPolicyManagedBy] != "" ||
+			gateway.Annotations[AnnotationSecurityPolicyGateway] != "" {
+			deepCopygateway := gateway.DeepCopy()
+			controllerutil.RemoveFinalizer(&gateway, FinalizerSecurityPolicy)
+			delete(gateway.Annotations, AnnotationSecurityPolicyLastUpdated)
+			delete(gateway.Annotations, AnnotationSecurityPolicyManagedBy)
+			delete(gateway.Annotations, AnnotationSecurityPolicyGateway)
+			if err := r.Patch(ctx, &gateway, client.MergeFrom(deepCopygateway)); err != nil {
+				log.Error(err, "unable to remove finalizer and managed annotations from Gateway", "Gateway.Namespace", req.Namespace, "Gateway.Name", req.Name)
+				return ctrl.Result{}, err
+			}
+		}
 		return ctrl.Result{}, nil
 	}
 
