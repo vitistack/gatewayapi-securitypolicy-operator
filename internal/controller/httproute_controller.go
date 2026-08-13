@@ -77,9 +77,9 @@ func (r *HTTPRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		// then let's add the finalizer and update the object. This is equivalent
 		// to registering our finalizer.
 		if !controllerutil.ContainsFinalizer(&httproute, FinalizerSecurityPolicy) &&
-			(httproute.Annotations[AnnotationSecurityPolicyLastUpdated] != "" ||
-				httproute.Annotations[AnnotationSecurityPolicyManagedBy] != "" ||
-				httproute.Annotations[AnnotationSecurityPolicyGateway] != "") {
+			(httproute.Annotations[AnnotationSecurityPolicyDefaultAction] != "" ||
+				httproute.Annotations[AnnotationSecurityPolicyLists] != "" ||
+				httproute.Annotations[AnnotationSecurityPolicyAddresses] != "") {
 			log.Info("Add Finalizer", "HttpRoute.Namespace", req.Namespace, "HttpRoute.Name", req.Name)
 			controllerutil.AddFinalizer(&httproute, FinalizerSecurityPolicy)
 			if err := r.Update(ctx, &httproute); err != nil {

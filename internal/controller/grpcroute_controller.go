@@ -78,9 +78,9 @@ func (r *GRPCRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		// then let's add the finalizer and update the object. This is equivalent
 		// to registering our finalizer.
 		if !controllerutil.ContainsFinalizer(&grpcroute, FinalizerSecurityPolicy) &&
-			(grpcroute.Annotations[AnnotationSecurityPolicyLastUpdated] != "" ||
-				grpcroute.Annotations[AnnotationSecurityPolicyManagedBy] != "" ||
-				grpcroute.Annotations[AnnotationSecurityPolicyGateway] != "") {
+			(grpcroute.Annotations[AnnotationSecurityPolicyDefaultAction] != "" ||
+				grpcroute.Annotations[AnnotationSecurityPolicyLists] != "" ||
+				grpcroute.Annotations[AnnotationSecurityPolicyAddresses] != "") {
 			log.Info("Add Finalizer", "GRPCRoute.Namespace", req.Namespace, "GRPCRoute.Name", req.Name)
 			controllerutil.AddFinalizer(&grpcroute, FinalizerSecurityPolicy)
 			if err := r.Update(ctx, &grpcroute); err != nil {

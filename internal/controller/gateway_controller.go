@@ -77,9 +77,9 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		// then let's add the finalizer and update the object. This is equivalent
 		// to registering our finalizer.
 		if !controllerutil.ContainsFinalizer(&gateway, FinalizerSecurityPolicy) &&
-			(gateway.Annotations[AnnotationSecurityPolicyLastUpdated] != "" ||
-				gateway.Annotations[AnnotationSecurityPolicyManagedBy] != "" ||
-				gateway.Annotations[AnnotationSecurityPolicyGateway] != "") {
+			(gateway.Annotations[AnnotationSecurityPolicyDefaultAction] != "" ||
+				gateway.Annotations[AnnotationSecurityPolicyLists] != "" ||
+				gateway.Annotations[AnnotationSecurityPolicyAddresses] != "") {
 			log.Info("Add Finalizer", "Gateway.Namespace", req.Namespace, "Gateway.Name", req.Name)
 			controllerutil.AddFinalizer(&gateway, FinalizerSecurityPolicy)
 			if err := r.Update(ctx, &gateway); err != nil {
