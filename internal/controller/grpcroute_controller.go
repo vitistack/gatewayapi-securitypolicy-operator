@@ -19,7 +19,6 @@ package controller
 import (
 	"context"
 	"reflect"
-	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -67,7 +66,7 @@ func (r *GRPCRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// Define gatewayApiResource for use in get/create/update SecurityPolicy functions
 	gatewayApiResource := gatewayApiResource{
-		Name:      strings.ToLower(grpcroute.GetObjectKind().GroupVersionKind().Kind) + "-" + grpcroute.Name,
+		Name:      grpcroute.Name,
 		Namespace: grpcroute.Namespace,
 		Kind:      grpcroute.GetObjectKind().GroupVersionKind().Kind,
 	}
