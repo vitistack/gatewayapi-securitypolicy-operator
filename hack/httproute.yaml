@@ -3,9 +3,8 @@ kind: HTTPRoute
 metadata:
   name: my-httproute
   annotations:
-    securitypolicies.vitistack.io/default-action: allow
-    securitypolicies.vitistack.io/addresses: "192.168.0.0/16"
-    securitypolicies.vitistack.io/lists: expose-thula
+    securitypolicies.vitistack.io/default-action: deny
+#    securitypolicies.vitistack.io/addresses: "192.168.0.0/16"
 spec:
   parentRefs:
     - name: my-gateway # Refers to a Gateway resource named 'my-gateway'

@@ -1,0 +1,14 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: httproute-my-httproute234
+  namespace: default
+spec:
+  authorization:
+    defaultAction: Allow
+    rules:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: my-httproute
+

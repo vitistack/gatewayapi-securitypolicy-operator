@@ -60,7 +60,11 @@ func updateSecurityPolicy(ctx context.Context, r Client, securitypolicy envoyv1.
 
 	// Remove SecurityPolicy Rules if no CIDRs found
 	if len(cidrs) == 0 {
-		securitypolicy.Spec.Authorization = nil
+		defaultActionValue := envoyv1.AuthorizationAction(defaultAction)
+		securitypolicy.Spec.Authorization = &envoyv1.Authorization{
+			DefaultAction: &defaultActionValue,
+			Rules:         []envoyv1.AuthorizationRule{},
+		}
 		if err := r.Update(ctx, &securitypolicy); err != nil {
 			return fmt.Errorf("failed to update SecurityPolicy: %w", err)
 		}

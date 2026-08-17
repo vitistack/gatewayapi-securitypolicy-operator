@@ -17,12 +17,13 @@ func getSecurityPolicy(ctx context.Context, r client.Client, gatewayApiResource 
 		return envoyv1.SecurityPolicy{}, err
 	}
 
-	// Find the SecurityPolicy that matches the HTTPRoute's name in targetRefs and append to a list
+	// Find the SecurityPolicy that matches the HTTPRoute's name and kind in targetRefs and append to a list
 	processedSecurityPolicyList := []envoyv1.SecurityPolicy{}
 	if len(securityPolicyList.Items) > 0 {
 		for _, securityPolicy := range securityPolicyList.Items {
 			for _, targetRef := range securityPolicy.Spec.TargetRefs {
-				if string(targetRef.Name) == gatewayApiResource.Name {
+				if string(targetRef.Name) == gatewayApiResource.Name &&
+					string(targetRef.Kind) == gatewayApiResource.Kind {
 					processedSecurityPolicyList = append(processedSecurityPolicyList, securityPolicy)
 				}
 			}

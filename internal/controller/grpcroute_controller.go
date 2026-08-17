@@ -19,7 +19,6 @@ package controller
 import (
 	"context"
 	"reflect"
-	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -67,7 +66,7 @@ func (r *GRPCRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// Define gatewayApiResource for use in get/create/update SecurityPolicy functions
 	gatewayApiResource := gatewayApiResource{
-		Name:      strings.ToLower(grpcroute.GetObjectKind().GroupVersionKind().Kind) + "-" + grpcroute.Name,
+		Name:      grpcroute.Name,
 		Namespace: grpcroute.Namespace,
 		Kind:      grpcroute.GetObjectKind().GroupVersionKind().Kind,
 	}
@@ -77,7 +76,10 @@ func (r *GRPCRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		// The object is not being deleted, so if it does not have our finalizer,
 		// then let's add the finalizer and update the object. This is equivalent
 		// to registering our finalizer.
-		if !controllerutil.ContainsFinalizer(&grpcroute, FinalizerSecurityPolicy) {
+		if !controllerutil.ContainsFinalizer(&grpcroute, FinalizerSecurityPolicy) &&
+			(grpcroute.Annotations[AnnotationSecurityPolicyDefaultAction] != "" ||
+				grpcroute.Annotations[AnnotationSecurityPolicyLists] != "" ||
+				grpcroute.Annotations[AnnotationSecurityPolicyAddresses] != "") {
 			log.Info("Add Finalizer", "GRPCRoute.Namespace", req.Namespace, "GRPCRoute.Name", req.Name)
 			controllerutil.AddFinalizer(&grpcroute, FinalizerSecurityPolicy)
 			if err := r.Update(ctx, &grpcroute); err != nil {
@@ -119,6 +121,40 @@ func (r *GRPCRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			log.Info("GRPCRoute already deleted", "name", req.NamespacedName)
 		}
 		// Stop reconciliation as the item is being deleted
+		return ctrl.Result{}, nil
+	}
+
+	// Delete SecurityPolicy if relevant annotations are removed from GRPCRoute
+	if grpcroute.Annotations[AnnotationSecurityPolicyDefaultAction] == "" &&
+		grpcroute.Annotations[AnnotationSecurityPolicyLists] == "" &&
+		grpcroute.Annotations[AnnotationSecurityPolicyAddresses] == "" {
+		// Only delete if a SecurityPolicy actually exists
+		if _, err := getSecurityPolicy(ctx, r.Client, gatewayApiResource); err == nil {
+			log.Info("Relevant annotations removed from GRPCRoute, deleting associated SecurityPolicy", "GRPCRoute.Namespace", req.Namespace, "GRPCRoute.Name", req.Name)
+			if err := deleteSecurityPolicy(ctx, r.Client, gatewayApiResource); err != nil {
+				log.Info("Failed to delete SecurityPolicy", "GRPCRoute.Namespace", req.Namespace, "GRPCRoute.Name", req.Name, "Error", err)
+				return ctrl.Result{}, err
+			}
+			log.Info("Deleted SecurityPolicy for GRPCRoute", "GRPCRoute.Namespace", req.Namespace, "GRPCRoute.Name", req.Name)
+		}
+
+		// Remove our finalizer and the annotations we manage.
+		// Only patch when there is something to remove, otherwise the resulting
+		// update event re-triggers reconciliation and loops.
+		if controllerutil.ContainsFinalizer(&grpcroute, FinalizerSecurityPolicy) ||
+			grpcroute.Annotations[AnnotationSecurityPolicyLastUpdated] != "" ||
+			grpcroute.Annotations[AnnotationSecurityPolicyManagedBy] != "" ||
+			grpcroute.Annotations[AnnotationSecurityPolicyGateway] != "" {
+			deepCopygrpcroute := grpcroute.DeepCopy()
+			controllerutil.RemoveFinalizer(&grpcroute, FinalizerSecurityPolicy)
+			delete(grpcroute.Annotations, AnnotationSecurityPolicyLastUpdated)
+			delete(grpcroute.Annotations, AnnotationSecurityPolicyManagedBy)
+			delete(grpcroute.Annotations, AnnotationSecurityPolicyGateway)
+			if err := r.Patch(ctx, &grpcroute, client.MergeFrom(deepCopygrpcroute)); err != nil {
+				log.Error(err, "unable to remove finalizer and managed annotations from GRPCRoute", "GRPCRoute.Namespace", req.Namespace, "GRPCRoute.Name", req.Name)
+				return ctrl.Result{}, err
+			}
+		}
 		return ctrl.Result{}, nil
 	}
 

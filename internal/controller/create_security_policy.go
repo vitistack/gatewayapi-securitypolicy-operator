@@ -25,7 +25,7 @@ func createSecurityPolicy(ctx context.Context, r client.Client, gatewayApiResour
 
 	// Check if SecurityPolicy already exists with the given name and overwrite TargetRefs
 	var existingSecurityPolicy envoyv1.SecurityPolicy
-	err := r.Get(ctx, client.ObjectKey{Name: gatewayApiResource.Name, Namespace: gatewayApiResource.Namespace}, &existingSecurityPolicy)
+	err := r.Get(ctx, client.ObjectKey{Name: gatewayApiResource.securityPolicyName(), Namespace: gatewayApiResource.Namespace}, &existingSecurityPolicy)
 	if err == nil {
 		// Overwrite TargetRefs if SecurityPolicy already exists
 		existingSecurityPolicy.Spec.TargetRefs = targetRefs
@@ -38,7 +38,7 @@ func createSecurityPolicy(ctx context.Context, r client.Client, gatewayApiResour
 	// Create a SecurityPolicy object
 	securityPolicy := envoyv1.SecurityPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      gatewayApiResource.Name,
+			Name:      gatewayApiResource.securityPolicyName(),
 			Namespace: gatewayApiResource.Namespace,
 		},
 		Spec: envoyv1.SecurityPolicySpec{

@@ -17,12 +17,13 @@ func deleteSecurityPolicy(ctx context.Context, r client.Client, gatewayApiResour
 		return err
 	}
 
-	// Find the SecurityPolicy that matches the HTTPRoute's name in targetRefs and append to a list
+	// Find the SecurityPolicy that matches the HTTPRoute's name and kind in targetRefs and append to a list
 	filterSecurityPolicyList := []envoyv1.SecurityPolicy{}
 	if len(securityPolicyList.Items) > 0 {
 		for _, securityPolicy := range securityPolicyList.Items {
 			for _, targetRef := range securityPolicy.Spec.TargetRefs {
-				if string(targetRef.Name) == gatewayApiResource.Name {
+				if string(targetRef.Name) == gatewayApiResource.Name &&
+					string(targetRef.Kind) == gatewayApiResource.Kind {
 					filterSecurityPolicyList = append(filterSecurityPolicyList, securityPolicy)
 				}
 			}
@@ -42,10 +43,11 @@ func deleteSecurityPolicy(ctx context.Context, r client.Client, gatewayApiResour
 					return err
 				}
 			} else {
-				// Remove TargetRef that matches the HTTPRoute's name
+				// Remove TargetRef that matches the HTTPRoute's name and kind
 				newTargetRefs := []gatewayv1.LocalPolicyTargetReferenceWithSectionName{}
 				for _, targetRef := range securityPolicy.Spec.TargetRefs {
-					if string(targetRef.Name) != gatewayApiResource.Name {
+					if string(targetRef.Name) != gatewayApiResource.Name ||
+						string(targetRef.Kind) != gatewayApiResource.Kind {
 						newTargetRefs = append(newTargetRefs, targetRef)
 					}
 				}
