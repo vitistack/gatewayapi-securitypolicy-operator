@@ -9,6 +9,7 @@ This operator enables dynamic integration of Kubernetes network policies with Ga
 - `securitypolicies.vitistack.io/default-action`: Specifies default action for the security policy. Valid values: `deny` || `allow`. It defaults to `deny` if omitted.
 - `securitypolicies.vitistack.io/lists`: Specifies the name of the `NetworkPolicy`. The Controller watches `networkpolicies.networking.k8s` in namespace `network-policies`. It supports multiple lists separated by comma.
 - `securitypolicies.vitistack.io/addresses`: Specifies a list of CIDR blocks to be manually included, e.g., `10.20.30.40/32,172.16.12.1/32`.
+- `securitypolicies.vitistack.io/countries`: Specifies a comma-separated list of ISO 3166-1 alpha-2 country codes to match on the client's geolocation, e.g., `US,GB,DE`. Codes are case-insensitive; any code not recognized as a valid Envoy country is silently omitted. CIDRs and countries are matched independently (OR). Country matching relies on Envoy Gateway geolocation (GeoIP) and is supported for `HTTPRoute` and `GRPCRoute` only.
 
 ## Getting Started
 
@@ -19,9 +20,9 @@ This operator enables dynamic integration of Kubernetes network policies with Ga
 kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.0/standard-install.yaml
 ```
 
-- Install Envoy Gateway, a Kubernetes-native API Gateway controller that manages Envoy Proxy deployments using the Kubernetes Gateway API.
+- Install Envoy Gateway, a Kubernetes-native API Gateway controller that manages Envoy Proxy deployments using the Kubernetes Gateway API. Version `v1.9` or later is required for country-based (geolocation) matching.
 ```bash
-kubectl apply --server-side -f https://github.com/envoyproxy/gateway/releases/download/v1.6.0/install.yaml
+kubectl apply --server-side -f https://github.com/envoyproxy/gateway/releases/download/v1.9.1/install.yaml
 ```
 
 - Network Policies

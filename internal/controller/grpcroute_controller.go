@@ -79,7 +79,8 @@ func (r *GRPCRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		if !controllerutil.ContainsFinalizer(&grpcroute, FinalizerSecurityPolicy) &&
 			(grpcroute.Annotations[AnnotationSecurityPolicyDefaultAction] != "" ||
 				grpcroute.Annotations[AnnotationSecurityPolicyLists] != "" ||
-				grpcroute.Annotations[AnnotationSecurityPolicyAddresses] != "") {
+				grpcroute.Annotations[AnnotationSecurityPolicyAddresses] != "" ||
+				grpcroute.Annotations[AnnotationSecurityPolicyCountries] != "") {
 			log.Info("Add Finalizer", "GRPCRoute.Namespace", req.Namespace, "GRPCRoute.Name", req.Name)
 			controllerutil.AddFinalizer(&grpcroute, FinalizerSecurityPolicy)
 			if err := r.Update(ctx, &grpcroute); err != nil {
@@ -127,7 +128,8 @@ func (r *GRPCRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// Delete SecurityPolicy if relevant annotations are removed from GRPCRoute
 	if grpcroute.Annotations[AnnotationSecurityPolicyDefaultAction] == "" &&
 		grpcroute.Annotations[AnnotationSecurityPolicyLists] == "" &&
-		grpcroute.Annotations[AnnotationSecurityPolicyAddresses] == "" {
+		grpcroute.Annotations[AnnotationSecurityPolicyAddresses] == "" &&
+		grpcroute.Annotations[AnnotationSecurityPolicyCountries] == "" {
 		// Only delete if a SecurityPolicy actually exists
 		if _, err := getSecurityPolicy(ctx, r.Client, gatewayApiResource); err == nil {
 			log.Info("Relevant annotations removed from GRPCRoute, deleting associated SecurityPolicy", "GRPCRoute.Namespace", req.Namespace, "GRPCRoute.Name", req.Name)
@@ -213,12 +215,16 @@ func (r *GRPCRouteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			oldObjAnnotationSecurityPolicyAddresses := e.ObjectOld.GetAnnotations()[AnnotationSecurityPolicyAddresses]
 			newObjAnnotationSecurityPolicyAddresses := e.ObjectNew.GetAnnotations()[AnnotationSecurityPolicyAddresses]
 
+			oldObjAnnotationSecurityPolicyCountries := e.ObjectOld.GetAnnotations()[AnnotationSecurityPolicyCountries]
+			newObjAnnotationSecurityPolicyCountries := e.ObjectNew.GetAnnotations()[AnnotationSecurityPolicyCountries]
+
 			newdObjAnnotationSecurityPolicyLastUpdated := e.ObjectNew.GetAnnotations()[AnnotationSecurityPolicyLastUpdated]
 
 			// Trigger reconciliation if relevant annotations have changed
 			return !reflect.DeepEqual(oldObjAnnotationSecurityPolicyDefaultAction, newObjAnnotationSecurityPolicyDefaultAction) ||
 				!reflect.DeepEqual(oldObjAnnotationSecurityPolicyLists, newObjAnnotationSecurityPolicyLists) ||
 				!reflect.DeepEqual(oldObjAnnotationSecurityPolicyAddresses, newObjAnnotationSecurityPolicyAddresses) ||
+				!reflect.DeepEqual(oldObjAnnotationSecurityPolicyCountries, newObjAnnotationSecurityPolicyCountries) ||
 				newdObjAnnotationSecurityPolicyLastUpdated == "" ||
 				!reflect.DeepEqual(e.ObjectOld.GetDeletionTimestamp(), e.ObjectNew.GetDeletionTimestamp())
 		},
@@ -226,7 +232,8 @@ func (r *GRPCRouteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			// Trigger reconciliation if relevant annotations are present
 			return e.Object.GetAnnotations()[AnnotationSecurityPolicyDefaultAction] != "" ||
 				e.Object.GetAnnotations()[AnnotationSecurityPolicyLists] != "" ||
-				e.Object.GetAnnotations()[AnnotationSecurityPolicyAddresses] != ""
+				e.Object.GetAnnotations()[AnnotationSecurityPolicyAddresses] != "" ||
+				e.Object.GetAnnotations()[AnnotationSecurityPolicyCountries] != ""
 		},
 		GenericFunc: func(e event.GenericEvent) bool {
 			return false

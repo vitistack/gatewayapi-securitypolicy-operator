@@ -24,3 +24,21 @@ type gatewayApiResource struct {
 func (g gatewayApiResource) securityPolicyName() string {
 	return strings.ToLower(g.Kind) + "-" + g.Name
 }
+
+// filterValidCountries returns the uppercased country codes that exist in
+// ValidEnvoyCountries, dropping any code that is not recognized.
+func filterValidCountries(countries []string) []string {
+	valid := make(map[string]struct{}, len(ValidEnvoyCountries))
+	for _, c := range ValidEnvoyCountries {
+		valid[c] = struct{}{}
+	}
+
+	var filtered []string
+	for _, country := range countries {
+		code := strings.ToUpper(strings.TrimSpace(country))
+		if _, ok := valid[code]; ok {
+			filtered = append(filtered, code)
+		}
+	}
+	return filtered
+}
