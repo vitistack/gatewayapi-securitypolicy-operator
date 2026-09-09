@@ -40,9 +40,10 @@ func updateSecurityPolicy(ctx context.Context, r Client, securitypolicy envoyv1.
 		ruleAction = string(envoyv1.AuthorizationActionAllow)
 	}
 
-	// Add PolicyList and PolicyAddresses to slices
+	// Add PolicyList, PolicyAddresses, and PolicyCountries to slices
 	var sliceAnnotationSecurityPolicyLists []string
 	var sliceAnnotationSecurityPolicyAddresses []string
+	var sliceAnnotationSecurityPolicyCountries []string
 
 	if _, ok := annotations[AnnotationSecurityPolicyLists]; ok {
 		sliceAnnotationSecurityPolicyLists = utils.FilterSliceFromString(strings.Split(annotations[AnnotationSecurityPolicyLists], ","))
@@ -52,14 +53,19 @@ func updateSecurityPolicy(ctx context.Context, r Client, securitypolicy envoyv1.
 		sliceAnnotationSecurityPolicyAddresses = utils.FilterSliceFromString(strings.Split(annotations[AnnotationSecurityPolicyAddresses], ","))
 	}
 
+	if _, ok := annotations[AnnotationSecurityPolicyCountries]; ok {
+		sliceAnnotationSecurityPolicyCountries = utils.FilterSliceFromString(strings.Split(annotations[AnnotationSecurityPolicyCountries], ","))
+		sliceAnnotationSecurityPolicyCountries = filterValidCountries(sliceAnnotationSecurityPolicyCountries)
+	}
+
 	// Get addresses
 	cidrs, err := getAddresses(ctx, r, sliceAnnotationSecurityPolicyLists, sliceAnnotationSecurityPolicyAddresses)
 	if err != nil {
 		return err
 	}
 
-	// Remove SecurityPolicy Rules if no CIDRs found
-	if len(cidrs) == 0 {
+	// Remove SecurityPolicy Rules if no CIDRs and Countries found
+	if len(cidrs) == 0 && len(sliceAnnotationSecurityPolicyCountries) == 0 {
 		defaultActionValue := envoyv1.AuthorizationAction(defaultAction)
 		securitypolicy.Spec.Authorization = &envoyv1.Authorization{
 			DefaultAction: &defaultActionValue,
@@ -77,18 +83,38 @@ func updateSecurityPolicy(ctx context.Context, r Client, securitypolicy envoyv1.
 		cidrSlice[i] = envoyv1.CIDR(cidr)
 	}
 
-	// Add cidrs to SecurityPolicy rules
+	// Build SecurityPolicy rules. CIDRs and countries are matched independently
+	// (OR), so each principal type gets its own rule.
+	rules := []envoyv1.AuthorizationRule{}
+
+	if len(cidrSlice) > 0 {
+		rules = append(rules, envoyv1.AuthorizationRule{
+			Action: envoyv1.AuthorizationAction(ruleAction),
+			Principal: &envoyv1.Principal{
+				ClientCIDRs: cidrSlice,
+			},
+		})
+	}
+
+	if len(sliceAnnotationSecurityPolicyCountries) > 0 {
+		geoLocations := make([]envoyv1.ClientIPGeoLocation, len(sliceAnnotationSecurityPolicyCountries))
+		for i, country := range sliceAnnotationSecurityPolicyCountries {
+			geoLocations[i] = envoyv1.ClientIPGeoLocation{
+				Country: &country,
+			}
+		}
+		rules = append(rules, envoyv1.AuthorizationRule{
+			Action: envoyv1.AuthorizationAction(ruleAction),
+			Principal: &envoyv1.Principal{
+				ClientIPGeoLocations: geoLocations,
+			},
+		})
+	}
+
 	defaultActionValue := envoyv1.AuthorizationAction(defaultAction)
 	securitypolicy.Spec.Authorization = &envoyv1.Authorization{
 		DefaultAction: &defaultActionValue,
-		Rules: []envoyv1.AuthorizationRule{
-			{
-				Action: envoyv1.AuthorizationAction(ruleAction),
-				Principal: envoyv1.Principal{
-					ClientCIDRs: cidrSlice,
-				},
-			},
-		},
+		Rules:         rules,
 	}
 
 	// Update SecurityPolicy

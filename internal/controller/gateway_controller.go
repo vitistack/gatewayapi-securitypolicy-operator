@@ -78,7 +78,8 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		if !controllerutil.ContainsFinalizer(&gateway, FinalizerSecurityPolicy) &&
 			(gateway.Annotations[AnnotationSecurityPolicyDefaultAction] != "" ||
 				gateway.Annotations[AnnotationSecurityPolicyLists] != "" ||
-				gateway.Annotations[AnnotationSecurityPolicyAddresses] != "") {
+				gateway.Annotations[AnnotationSecurityPolicyAddresses] != "" ||
+				gateway.Annotations[AnnotationSecurityPolicyCountries] != "") {
 			log.Info("Add Finalizer", "Gateway.Namespace", req.Namespace, "Gateway.Name", req.Name)
 			controllerutil.AddFinalizer(&gateway, FinalizerSecurityPolicy)
 			if err := r.Update(ctx, &gateway); err != nil {
@@ -108,7 +109,8 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	// Delete SecurityPolicy if relevant annotations are removed from Gateway
 	if gateway.Annotations[AnnotationSecurityPolicyDefaultAction] == "" &&
 		gateway.Annotations[AnnotationSecurityPolicyLists] == "" &&
-		gateway.Annotations[AnnotationSecurityPolicyAddresses] == "" {
+		gateway.Annotations[AnnotationSecurityPolicyAddresses] == "" &&
+		gateway.Annotations[AnnotationSecurityPolicyCountries] == "" {
 		// Only delete if a SecurityPolicy actually exists
 		if _, err := getSecurityPolicy(ctx, r.Client, gatewayApiResource); err == nil {
 			log.Info("Relevant annotations removed from Gateway, deleting associated SecurityPolicy", "Gateway.Namespace", req.Namespace, "Gateway.Name", req.Name)
@@ -194,12 +196,16 @@ func (r *GatewayReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			oldObjAnnotationSecurityPolicyAddresses := e.ObjectOld.GetAnnotations()[AnnotationSecurityPolicyAddresses]
 			newObjAnnotationSecurityPolicyAddresses := e.ObjectNew.GetAnnotations()[AnnotationSecurityPolicyAddresses]
 
+			oldObjAnnotationSecurityPolicyCountries := e.ObjectOld.GetAnnotations()[AnnotationSecurityPolicyCountries]
+			newObjAnnotationSecurityPolicyCountries := e.ObjectNew.GetAnnotations()[AnnotationSecurityPolicyCountries]
+
 			newdObjAnnotationSecurityPolicyLastUpdated := e.ObjectNew.GetAnnotations()[AnnotationSecurityPolicyLastUpdated]
 
 			// Trigger reconciliation if relevant annotations have changed
 			return !reflect.DeepEqual(oldObjAnnotationSecurityPolicyDefaultAction, newObjAnnotationSecurityPolicyDefaultAction) ||
 				!reflect.DeepEqual(oldObjAnnotationSecurityPolicyLists, newObjAnnotationSecurityPolicyLists) ||
 				!reflect.DeepEqual(oldObjAnnotationSecurityPolicyAddresses, newObjAnnotationSecurityPolicyAddresses) ||
+				!reflect.DeepEqual(oldObjAnnotationSecurityPolicyCountries, newObjAnnotationSecurityPolicyCountries) ||
 				newdObjAnnotationSecurityPolicyLastUpdated == "" ||
 				!reflect.DeepEqual(e.ObjectOld.GetDeletionTimestamp(), e.ObjectNew.GetDeletionTimestamp())
 		},
@@ -207,7 +213,8 @@ func (r *GatewayReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			// Trigger reconciliation if relevant annotations are present
 			return e.Object.GetAnnotations()[AnnotationSecurityPolicyDefaultAction] != "" ||
 				e.Object.GetAnnotations()[AnnotationSecurityPolicyLists] != "" ||
-				e.Object.GetAnnotations()[AnnotationSecurityPolicyAddresses] != ""
+				e.Object.GetAnnotations()[AnnotationSecurityPolicyAddresses] != "" ||
+				e.Object.GetAnnotations()[AnnotationSecurityPolicyCountries] != ""
 		},
 		GenericFunc: func(e event.GenericEvent) bool {
 			return false
