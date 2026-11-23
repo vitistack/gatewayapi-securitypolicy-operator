@@ -1,5 +1,5 @@
 apiVersion: securitypolicy.vitistack.io/v1alpha1
-kind: CidrList
+kind: CIDRList
 metadata:
   name: test-networks-list
 spec:

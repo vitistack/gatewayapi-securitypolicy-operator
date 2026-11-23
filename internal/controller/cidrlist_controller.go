@@ -34,8 +34,8 @@ import (
 	utils "github.com/vitistack/gatewayapi-securitypolicy-operator/internal/utils"
 )
 
-// CidrListReconciler reconciles a CidrList object
-type CidrListReconciler struct {
+// CIDRListReconciler reconciles a CIDRList object
+type CIDRListReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
@@ -43,22 +43,22 @@ type CidrListReconciler struct {
 // +kubebuilder:rbac:groups=securitypolicy.vitistack.io,resources=cidrlists,verbs=get;list;watch
 
 // Reconcile notifies all HTTPRoutes, GRPCRoutes and Gateways that reference the
-// CidrList in their lists annotation, so their SecurityPolicy is rebuilt.
-// This also runs when the CidrList is deleted, so they fall back to NetworkPolicy.
-// The CidrList status is owned by its creator and is never written here.
-func (r *CidrListReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+// CIDRList in their lists annotation, so their SecurityPolicy is rebuilt.
+// This also runs when the CIDRList is deleted, so they fall back to NetworkPolicy.
+// The CIDRList status is owned by its creator and is never written here.
+func (r *CIDRListReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
-	log.Info("Reconciling CidrList", "CidrList.Name", req.Name)
+	log.Info("Reconciling CIDRList", "CIDRList.Name", req.Name)
 
-	// Check if the CidrList still exists
-	var cidrList securitypolicyv1alpha1.CidrList
+	// Check if the CIDRList still exists
+	var cidrList securitypolicyv1alpha1.CIDRList
 	if err := r.Get(ctx, req.NamespacedName, &cidrList); err != nil {
 		if !apierrors.IsNotFound(err) {
-			log.Error(err, "Failed to get CidrList")
+			log.Error(err, "Failed to get CIDRList")
 			return ctrl.Result{}, err
 		}
-		log.Info("CidrList deleted, notifying referencing resources", "CidrList.Name", req.Name)
+		log.Info("CIDRList deleted, notifying referencing resources", "CIDRList.Name", req.Name)
 	}
 
 	// Fetch all HttpRoutes in the cluster
@@ -98,7 +98,7 @@ func (r *CidrListReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		objects = append(objects, referencingObject{"Gateway", &gatewayList.Items[i]})
 	}
 
-	// Notify all objects that reference the CidrList Name
+	// Notify all objects that reference the CIDRList Name
 	for _, o := range objects {
 		annotationLists, ok := o.obj.GetAnnotations()[AnnotationSecurityPolicyLists]
 		if !ok {
@@ -112,19 +112,19 @@ func (r *CidrListReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			log.Error(err, "Failed to notify "+o.kind, "Namespace", o.obj.GetNamespace(), "Name", o.obj.GetName())
 			return ctrl.Result{}, err
 		}
-		log.Info("Patched "+o.kind+" due to CidrList change", "Namespace", o.obj.GetNamespace(), "Name", o.obj.GetName())
+		log.Info("Patched "+o.kind+" due to CIDRList change", "Namespace", o.obj.GetNamespace(), "Name", o.obj.GetName())
 	}
 
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
-// The controller is skipped if the CidrList CRD is not installed.
-func (r *CidrListReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	gvk := securitypolicyv1alpha1.SchemeGroupVersion.WithKind("CidrList")
+// The controller is skipped if the CIDRList CRD is not installed.
+func (r *CIDRListReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	gvk := securitypolicyv1alpha1.SchemeGroupVersion.WithKind("CIDRList")
 	if _, err := mgr.GetRESTMapper().RESTMapping(gvk.GroupKind(), gvk.Version); err != nil {
 		if meta.IsNoMatchError(err) {
-			mgr.GetLogger().Info("CidrList CRD not installed, skipping CidrList controller")
+			mgr.GetLogger().Info("CIDRList CRD not installed, skipping CIDRList controller")
 			return nil
 		}
 		return err
@@ -132,7 +132,7 @@ func (r *CidrListReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	// Only react to spec changes, so status updates do not trigger a new reconcile
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&securitypolicyv1alpha1.CidrList{}).
+		For(&securitypolicyv1alpha1.CIDRList{}).
 		Named("cidrlist").
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)

@@ -1,5 +1,5 @@
 apiVersion: securitypolicy.vitistack.io/v1alpha1
-kind: CidrList
+kind: CIDRList
 metadata:
   labels:
     app.kubernetes.io/name: gatewayapi-securitypolicy-operator

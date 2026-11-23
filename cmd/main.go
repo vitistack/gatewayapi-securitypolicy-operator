@@ -217,11 +217,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := (&controller.CidrListReconciler{
+	if err := (&controller.CIDRListReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "CidrList")
+		setupLog.Error(err, "unable to create controller", "controller", "CIDRList")
 		os.Exit(1)
 	}
 

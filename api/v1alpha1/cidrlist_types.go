@@ -24,8 +24,8 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// CidrListSpec defines the desired state of CidrList
-type CidrListSpec struct {
+// CIDRListSpec defines the desired state of CIDRList
+type CIDRListSpec struct {
 	// cidrs is the list of CIDR blocks, e.g. "10.0.0.0/8" or "2001:db8::/32".
 	// +optional
 	// +kubebuilder:validation:MaxItems=100000
@@ -33,12 +33,12 @@ type CidrListSpec struct {
 	// +kubebuilder:validation:items:MaxLength=64
 	// +kubebuilder:validation:items:XValidation:rule="!isCIDR(self) || cidr(self) == cidr(self).masked()",message="CIDR must not have host bits set, e.g. use 10.0.0.0/8 instead of 10.0.0.1/8"
 	// +listType=set
-	Cidrs []string `json:"cidrs,omitempty"`
+	CIDRs []string `json:"cidrs,omitempty"`
 }
 
-// CidrListStatus defines the observed state of CidrList.
-type CidrListStatus struct {
-	// lastSynced is the last time the creator of the CidrList synced it.
+// CIDRListStatus defines the observed state of CIDRList.
+type CIDRListStatus struct {
+	// lastSynced is the last time the creator of the CIDRList synced it.
 	// It is set by the creator only, never by the operator.
 	// +optional
 	LastSynced *metav1.Time `json:"lastSynced,omitempty"`
@@ -48,35 +48,35 @@ type CidrListStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
 
-// CidrList is the Schema for the cidrlists API
-type CidrList struct {
+// CIDRList is the Schema for the cidrlists API
+type CIDRList struct {
 	metav1.TypeMeta `json:",inline"`
 
 	// metadata is a standard object metadata
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitzero"`
 
-	// spec defines the desired state of CidrList
+	// spec defines the desired state of CIDRList
 	// +required
-	Spec CidrListSpec `json:"spec"`
+	Spec CIDRListSpec `json:"spec"`
 
-	// status defines the observed state of CidrList
+	// status defines the observed state of CIDRList
 	// +optional
-	Status CidrListStatus `json:"status,omitzero"`
+	Status CIDRListStatus `json:"status,omitzero"`
 }
 
 // +kubebuilder:object:root=true
 
-// CidrListList contains a list of CidrList
-type CidrListList struct {
+// CIDRListList contains a list of CIDRList
+type CIDRListList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitzero"`
-	Items           []CidrList `json:"items"`
+	Items           []CIDRList `json:"items"`
 }
 
 func init() {
 	SchemeBuilder.Register(func(s *runtime.Scheme) error {
-		s.AddKnownTypes(SchemeGroupVersion, &CidrList{}, &CidrListList{})
+		s.AddKnownTypes(SchemeGroupVersion, &CIDRList{}, &CIDRListList{})
 		return nil
 	})
 }

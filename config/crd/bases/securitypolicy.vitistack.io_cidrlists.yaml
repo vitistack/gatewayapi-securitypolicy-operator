@@ -8,8 +8,8 @@ metadata:
 spec:
   group: securitypolicy.vitistack.io
   names:
-    kind: CidrList
-    listKind: CidrListList
+    kind: CIDRList
+    listKind: CIDRListList
     plural: cidrlists
     singular: cidrlist
   scope: Cluster
@@ -17,7 +17,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: CidrList is the Schema for the cidrlists API
+        description: CIDRList is the Schema for the cidrlists API
         properties:
           apiVersion:
             description: |-
@@ -37,7 +37,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: spec defines the desired state of CidrList
+            description: spec defines the desired state of CIDRList
             properties:
               cidrs:
                 description: cidrs is the list of CIDR blocks, e.g. "10.0.0.0/8" or
@@ -55,11 +55,11 @@ spec:
                 x-kubernetes-list-type: set
             type: object
           status:
-            description: status defines the observed state of CidrList
+            description: status defines the observed state of CIDRList
             properties:
               lastSynced:
                 description: |-
-                  lastSynced is the last time the creator of the CidrList synced it.
+                  lastSynced is the last time the creator of the CIDRList synced it.
                   It is set by the creator only, never by the operator.
                 format: date-time
                 type: string

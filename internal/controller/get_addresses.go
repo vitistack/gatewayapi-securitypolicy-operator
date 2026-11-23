@@ -17,11 +17,11 @@ func getAddresses(ctx context.Context, r Client, securityPolicyList []string, ad
 
 	var cidrs []string
 
-	// Get each list as a CidrList, falling back to a NetworkPolicy, and extract CIDRs
+	// Get each list as a CIDRList, falling back to a NetworkPolicy, and extract CIDRs
 
 	for _, listName := range securityPolicyList {
 
-		cidrListCIDRs, found, err := getCidrListCIDRs(ctx, r, listName)
+		cidrListCIDRs, found, err := getCIDRListCIDRs(ctx, r, listName)
 		if err != nil {
 			return nil, err
 		}
@@ -62,25 +62,25 @@ func getAddresses(ctx context.Context, r Client, securityPolicyList []string, ad
 	return compactSortedCIDRs, nil
 }
 
-// getCidrListCIDRs returns the CIDRs of the cluster-scoped CidrList with the given name.
-// found is false if the CidrList does not exist or the CidrList CRD is not installed.
-func getCidrListCIDRs(ctx context.Context, r Client, name string) (cidrs []string, found bool, err error) {
+// getCIDRListCIDRs returns the CIDRs of the cluster-scoped CIDRList with the given name.
+// found is false if the CIDRList does not exist or the CIDRList CRD is not installed.
+func getCIDRListCIDRs(ctx context.Context, r Client, name string) (cidrs []string, found bool, err error) {
 	log := logf.FromContext(ctx)
 
-	cidrList := securitypolicyv1alpha1.CidrList{}
+	cidrList := securitypolicyv1alpha1.CIDRList{}
 
 	err = r.Get(ctx, client.ObjectKey{Name: name}, &cidrList)
 
 	switch {
 	case err == nil:
-		return cidrList.Spec.Cidrs, true, nil
+		return cidrList.Spec.CIDRs, true, nil
 	case meta.IsNoMatchError(err):
-		log.Info("CidrList CRD not installed, falling back to NetworkPolicy", "Name", name)
+		log.Info("CIDRList CRD not installed, falling back to NetworkPolicy", "Name", name)
 		return nil, false, nil
 	case apierrors.IsNotFound(err):
-		log.Info("CidrList not found, falling back to NetworkPolicy", "Name", name)
+		log.Info("CIDRList not found, falling back to NetworkPolicy", "Name", name)
 		return nil, false, nil
 	default:
-		return nil, false, fmt.Errorf("unable to fetch CidrList %q: %w", name, err)
+		return nil, false, fmt.Errorf("unable to fetch CIDRList %q: %w", name, err)
 	}
 }
