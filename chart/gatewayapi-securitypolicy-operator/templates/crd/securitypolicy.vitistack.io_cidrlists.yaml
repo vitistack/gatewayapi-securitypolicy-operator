@@ -64,7 +64,9 @@ spec:
             description: status defines the observed state of CidrList
             properties:
               lastSynced:
-                description: lastSynced is the last time the CidrList was synced.
+                description: |-
+                  lastSynced is the last time the creator of the CidrList synced it.
+                  It is set by the creator only, never by the operator.
                 format: date-time
                 type: string
             type: object

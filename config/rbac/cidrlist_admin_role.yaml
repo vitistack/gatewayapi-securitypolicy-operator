@@ -25,3 +25,5 @@ rules:
   - cidrlists/status
   verbs:
   - get
+  - patch
+  - update

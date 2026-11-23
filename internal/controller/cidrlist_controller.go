@@ -23,7 +23,6 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -42,26 +41,24 @@ type CidrListReconciler struct {
 }
 
 // +kubebuilder:rbac:groups=securitypolicy.vitistack.io,resources=cidrlists,verbs=get;list;watch
-// +kubebuilder:rbac:groups=securitypolicy.vitistack.io,resources=cidrlists/status,verbs=get;update;patch
 
 // Reconcile notifies all HTTPRoutes, GRPCRoutes and Gateways that reference the
 // CidrList in their lists annotation, so their SecurityPolicy is rebuilt.
 // This also runs when the CidrList is deleted, so they fall back to NetworkPolicy.
+// The CidrList status is owned by its creator and is never written here.
 func (r *CidrListReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
 	log.Info("Reconciling CidrList", "CidrList.Name", req.Name)
 
-	// Fetch the CidrList instance
+	// Check if the CidrList still exists
 	var cidrList securitypolicyv1alpha1.CidrList
-	deleted := false
 	if err := r.Get(ctx, req.NamespacedName, &cidrList); err != nil {
 		if !apierrors.IsNotFound(err) {
 			log.Error(err, "Failed to get CidrList")
 			return ctrl.Result{}, err
 		}
 		log.Info("CidrList deleted, notifying referencing resources", "CidrList.Name", req.Name)
-		deleted = true
 	}
 
 	// Fetch all HttpRoutes in the cluster
@@ -116,18 +113,6 @@ func (r *CidrListReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			return ctrl.Result{}, err
 		}
 		log.Info("Patched "+o.kind+" due to CidrList change", "Namespace", o.obj.GetNamespace(), "Name", o.obj.GetName())
-	}
-
-	if deleted {
-		return ctrl.Result{}, nil
-	}
-
-	// Record when the CidrList was last synced
-	now := metav1.Now()
-	cidrList.Status.LastSynced = &now
-	if err := r.Status().Update(ctx, &cidrList); err != nil {
-		log.Error(err, "Failed to update CidrList status", "CidrList.Name", req.Name)
-		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil

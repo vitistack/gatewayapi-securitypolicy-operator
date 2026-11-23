@@ -38,7 +38,8 @@ type CidrListSpec struct {
 
 // CidrListStatus defines the observed state of CidrList.
 type CidrListStatus struct {
-	// lastSynced is the last time the CidrList was synced.
+	// lastSynced is the last time the creator of the CidrList synced it.
+	// It is set by the creator only, never by the operator.
 	// +optional
 	LastSynced *metav1.Time `json:"lastSynced,omitempty"`
 }
