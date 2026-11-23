@@ -1,7 +1,7 @@
 apiVersion: securitypolicy.vitistack.io/v1alpha1
 kind: CidrList
 metadata:
-  name: test-network-lists
+  name: test-networks-list
 spec:
   cidrs:
     - 192.168.10.0/24
