@@ -23,8 +23,9 @@ import (
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
-	"github.com/vitistack/gatewayapi-securitypolicy-operator/internal/controller"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+
+	"github.com/vitistack/gatewayapi-securitypolicy-operator/internal/controller"
 
 	envoyv1 "github.com/envoyproxy/gateway/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -38,6 +39,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	gatewayv1 "sigs.k8s.io/gateway-api/apis/v1"
 	gatewayv1alpha2 "sigs.k8s.io/gateway-api/apis/v1alpha2"
+
+	securitypolicyv1alpha1 "github.com/vitistack/gatewayapi-securitypolicy-operator/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -52,6 +55,7 @@ func init() {
 	utilruntime.Must(gatewayv1alpha2.Install(scheme))
 	utilruntime.Must(envoyv1.AddToScheme(scheme))
 
+	utilruntime.Must(securitypolicyv1alpha1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -210,6 +214,14 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NetworkPolicy")
+		os.Exit(1)
+	}
+
+	if err := (&controller.CidrListReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "CidrList")
 		os.Exit(1)
 	}
 

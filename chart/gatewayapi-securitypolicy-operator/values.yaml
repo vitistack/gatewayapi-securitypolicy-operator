@@ -52,8 +52,9 @@ rbac:
 # [CRDs]: To enable the CRDs
 crd:
   # This option determines whether the CRDs are included
-  # in the installation process.
-  enable: false
+  # in the installation process. The CRDs are rendered from
+  # templates/crd, so they are also updated on helm upgrade.
+  enable: true
 
   # Enabling this option adds the "helm.sh/resource-policy": keep
   # annotation to the CRD, ensuring it remains installed even when
@@ -76,6 +77,12 @@ prometheus:
 certmanager:
   enable: false
 
-# [NETWORK POLICIES]: To enable NetworkPolicies set true
+# [NETWORK POLICIES]: Restrict ingress to the controller-manager pod.
+# When true, a NetworkPolicy ("allow-metrics-traffic") is created that only
+# allows traffic to the metrics port (8443/TCP) from namespaces labeled
+# "metrics: enabled". All other ingress to the pod is denied.
+# NOTE: Label your Prometheus namespace, otherwise scraping stops:
+#   kubectl label namespace <prometheus-namespace> metrics=enabled
+# NOTE: Requires a CNI that enforces NetworkPolicies (e.g. Calico, Cilium).
 networkPolicy:
   enable: false
