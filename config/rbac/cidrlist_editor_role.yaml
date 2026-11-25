@@ -1,0 +1,35 @@
+# This rule is not used by the project gatewayapi-securitypolicy-operator itself.
+# It is provided to allow the cluster admin to help manage permissions for users.
+#
+# Grants permissions to create, update, and delete resources within the securitypolicy.vitistack.io.
+# This role is intended for users who need to manage these resources
+# but should not control RBAC or manage permissions for others.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: gatewayapi-securitypolicy-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: cidrlist-editor-role
+rules:
+- apiGroups:
+  - securitypolicy.vitistack.io
+  resources:
+  - cidrlists
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - securitypolicy.vitistack.io
+  resources:
+  - cidrlists/status
+  verbs:
+  - get
+  - patch
+  - update

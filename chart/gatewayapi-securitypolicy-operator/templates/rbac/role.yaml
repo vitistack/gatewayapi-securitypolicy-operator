@@ -39,4 +39,12 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - securitypolicy.vitistack.io
+  resources:
+  - cidrlists
+  verbs:
+  - get
+  - list
+  - watch
 {{- end -}}

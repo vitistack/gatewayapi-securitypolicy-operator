@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- securitypolicy_v1alpha1_cidrlist.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

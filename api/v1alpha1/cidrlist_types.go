@@ -1,0 +1,82 @@
+/*
+Copyright 2025.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package v1alpha1
+
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+)
+
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
+// CIDRListSpec defines the desired state of CIDRList
+type CIDRListSpec struct {
+	// cidrs is the list of CIDR blocks, e.g. "10.0.0.0/8" or "2001:db8::/32".
+	// +optional
+	// +kubebuilder:validation:MaxItems=100000
+	// +kubebuilder:validation:items:Format=cidr
+	// +kubebuilder:validation:items:MaxLength=64
+	// +kubebuilder:validation:items:XValidation:rule="!isCIDR(self) || cidr(self) == cidr(self).masked()",message="CIDR must not have host bits set, e.g. use 10.0.0.0/8 instead of 10.0.0.1/8"
+	// +listType=set
+	CIDRs []string `json:"cidrs,omitempty"`
+}
+
+// CIDRListStatus defines the observed state of CIDRList.
+type CIDRListStatus struct {
+	// lastSynced is the last time the creator of the CIDRList synced it.
+	// It is set by the creator only, never by the operator.
+	// +optional
+	LastSynced *metav1.Time `json:"lastSynced,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
+
+// CIDRList is the Schema for the cidrlists API
+type CIDRList struct {
+	metav1.TypeMeta `json:",inline"`
+
+	// metadata is a standard object metadata
+	// +optional
+	metav1.ObjectMeta `json:"metadata,omitzero"`
+
+	// spec defines the desired state of CIDRList
+	// +required
+	Spec CIDRListSpec `json:"spec"`
+
+	// status defines the observed state of CIDRList
+	// +optional
+	Status CIDRListStatus `json:"status,omitzero"`
+}
+
+// +kubebuilder:object:root=true
+
+// CIDRListList contains a list of CIDRList
+type CIDRListList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitzero"`
+	Items           []CIDRList `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(func(s *runtime.Scheme) error {
+		s.AddKnownTypes(SchemeGroupVersion, &CIDRList{}, &CIDRListList{})
+		return nil
+	})
+}

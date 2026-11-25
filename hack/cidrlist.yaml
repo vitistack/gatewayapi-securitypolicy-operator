@@ -1,0 +1,9 @@
+apiVersion: securitypolicy.vitistack.io/v1alpha1
+kind: CIDRList
+metadata:
+  name: test-networks-list
+spec:
+  cidrs:
+    - 192.168.10.0/24
+status:
+  lastSynced: "2026-11-23T10:15:00Z"
